@@ -1,0 +1,1453 @@
+<?xml version="1.0"?>
+
+<!-- WSDL description of Peakflow SP SOAP APIs. -->
+<!-- $Arbor: PeakflowSP.wsdl 44852 2008-06-26 16:30:50Z pparkanzky $ -->
+
+<definitions name="PeakflowSP"
+	     targetNamespace="urn:PeakflowSP"
+	     xmlns:tns="urn:PeakflowSP"
+	     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+	     xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+  <!-- self defined types -->
+
+  <types>
+
+    <!-- define our target namespace -->
+    <xsd:schema xmlns="http://www.w3.org/2001/XMLSchema"
+		targetNamespace="urn:PeakflowSP">
+       <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+
+       <xsd:complexType name="AccountConfiguration">
+	  <xsd:sequence>
+	    <xsd:element name="username" type="xsd:string"/>
+	    <xsd:element name="password" type="xsd:base64Binary"/>
+	    <xsd:element name="group" type="xsd:string"/>
+	    <xsd:element name="capabilityLevel" type="tns:capabilityLevelType"/>
+	    <xsd:element name="device" type="xsd:string"/>
+	    <xsd:element name="menu" minOccurs="0" type="xsd:string"/>
+	    <xsd:element name="timezone" minOccurs="0" type="xsd:string"/>
+	    <xsd:element name="realname" minOccurs="0" type="xsd:string"/>
+	    <xsd:element name="email" minOccurs="0" type="xsd:string"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:simpleType name="AlertImportance">
+	  <xsd:restriction base="xsd:string">
+	      <xsd:enumeration value="low"/>
+	      <xsd:enumeration value="medium"/>
+	      <xsd:enumeration value="high"/>
+	  </xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:complexType name="AlertManagedObject">
+	  <xsd:sequence>
+	      <xsd:element name="name"		type="xsd:string"/>
+	      <xsd:element name="id"		type="xsd:unsignedInt"/>
+	      <xsd:element name="cidrGroup"
+			     type="xsd:string"
+			     minOccurs="0"/>
+	      <xsd:element name="importance"
+			      type="tns:AlertImportance"
+			      minOccurs="0"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="AlertResource">
+	  <xsd:sequence>
+	      <xsd:element name="name"
+			     type="xsd:string"
+			     minOccurs="0"/>
+	      <xsd:element name="cidr"
+			     type="xsd:string"
+			     minOccurs="0"/>
+	      <xsd:element name="ipVersion"	type="xsd:unsignedInt"/>
+	      <xsd:element name="managedObjects"
+		  	     type="tns:AlertManagedObject"
+			     minOccurs="0"
+			     maxOccurs="unbounded"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:simpleType name="AlertDirection">
+	  <xsd:restriction base="xsd:string">
+	      <xsd:enumeration value="Incoming"/>
+	      <xsd:enumeration value="Outgoing"/>
+	      <xsd:enumeration value="N/A"/>
+	  </xsd:restriction>
+      </xsd:simpleType>
+
+      <!-- Annotations, used by alerts and mitigations -->
+      <xsd:complexType name="Annotation">
+	  <xsd:sequence>
+	      <xsd:element name="added"		type="xsd:dateTime"/>
+	      <xsd:element name="author"	type="xsd:string"/>
+	      <xsd:element name="content"	type="xsd:string"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="DosAlertDetails">
+	<xsd:sequence>
+	    <xsd:element name="id"		type="xsd:unsignedInt"/>
+	    <xsd:element name="bytes_total"	
+				minOccurs="0" type="xsd:double"/>
+	    <xsd:element name="packets_total"
+				minOccurs="0" type="xsd:double"/>
+	    <xsd:element name="src_prefixes"
+				minOccurs="0"
+				maxOccurs="unbounded"
+				type="tns:PrefixTraffic"/>
+	    <xsd:element name="dst_prefixes"
+				minOccurs="0"
+				maxOccurs="unbounded"
+				type="tns:PrefixTraffic"/>
+	    <xsd:element name="src_ports"
+				minOccurs="0"
+				maxOccurs="unbounded"
+				type="tns:PortTraffic"/>
+	    <xsd:element name="dst_ports"
+				minOccurs="0"
+				maxOccurs="unbounded"
+				type="tns:PortTraffic"/>
+	    <xsd:element name="protocols"
+				minOccurs="0"
+				maxOccurs="unbounded"
+				type="tns:ProtocolTraffic"/>
+	    <xsd:element name="tcpFlags"
+				minOccurs="0"
+				maxOccurs="unbounded"
+				type="tns:TcpFlagsTraffic"/>
+	   <xsd:element name="impact_bps"
+	       		   minOccurs="0"
+			   maxOccurs="unbounded"
+			   type="xsd:float"/>
+	   <xsd:element name="impact_pps"
+	       		   minOccurs="0"
+			   maxOccurs="unbounded"
+			   type="xsd:float"/>
+
+	</xsd:sequence>
+    </xsd:complexType>
+
+      <xsd:complexType name="DosAlertSummary">
+	<xsd:sequence>
+	    <!-- Basic alert details -->
+	    <xsd:element name="id"		type="xsd:unsignedInt"/>
+	    <xsd:element name="type"		type="xsd:string"/>
+	    <xsd:element name="importance"	type="tns:AlertImportance"/>
+	    <xsd:element name="classification"	type="xsd:string"/>
+	    <xsd:element name="device_gid"	type="xsd:unsignedInt"/>
+	    <xsd:element name="device_name"	type="xsd:string"/>
+	    <xsd:element name="direction"	type="tns:AlertDirection"/>
+	    <xsd:element name="unit"		type="tns:unitType"/>
+	    <xsd:element name="threshold"	type="xsd:float"/>
+	    <xsd:element name="severity_pct"	type="xsd:float"/>
+	    <xsd:element name="ticket"
+			   type="xsd:string"
+			   minOccurs="0"/>
+
+	    <!-- Time-related information: stop, start, duration, etc. -->
+	    <xsd:element name="ongoing"		type="xsd:boolean"/>
+	    <xsd:element name="start"		type="xsd:dateTime"/>
+	    <xsd:element name="stop"		
+			   minOccurs="0"
+			   type="xsd:dateTime"/>
+	    <xsd:element name="duration"	type="xsd:float"/>
+
+	    <!-- Network resource affected by alert -->
+	    <xsd:element name="resource"	type="tns:AlertResource"/>
+
+	    <!-- Alert traffic signature, base64-encoded -->
+	    <xsd:element name="signature"
+			   minOccurs="0"
+			   type="xsd:base64Binary"/>
+
+	    <!-- List of all protocols involved in the alert -->
+	    <xsd:element name="protocols"
+			   minOccurs="0"
+			   maxOccurs="unbounded"
+			   type="xsd:string"/>
+
+	    <!-- For DoS Host alerts only, list of misuse signatures seen -->
+	    <xsd:element name="misuseTypes"
+			   minOccurs="0"
+			   maxOccurs="unbounded"
+			   type="xsd:string"/>
+
+	   <!-- List of any alert annotations -->
+	   <xsd:element name="annotations"
+			   minOccurs="0"
+			   maxOccurs="unbounded"
+			   type="tns:Annotation"/>
+
+	   <!-- Max impact of traffic on the target over life of the alert.
+	   Not available for all alerts -->
+	   <xsd:element name="max_impact_bps"
+	       		   minOccurs="0"
+			   maxOccurs="unbounded"
+			   type="xsd:float"/>
+	   <xsd:element name="max_impact_pps"
+	       		   minOccurs="0"
+			   maxOccurs="unbounded"
+			   type="xsd:float"/>
+
+	    <!-- 
+	       "Thumbnail" impact data points: a small number of points
+	       covering the life of the alert; enough to make a small graph
+	       (e.g. for a listing page of alerts).
+
+	       These three lists are ordered.  Each value in the
+	       impact_recorded list gives the time (in seconds since the
+	       epoch) that the corresponding points in the
+	       impact_bps_points/impact_pps_points lists were observed.
+	    -->
+	   <xsd:element name="impact_bps_points"
+	       		   minOccurs="0"
+	       		   maxOccurs="unbounded"
+	      		   type="xsd:float"/>
+	   <xsd:element name="impact_pps_points"
+	       		   minOccurs="0"
+	       		   maxOccurs="unbounded"
+	      		   type="xsd:float"/>
+	   <xsd:element name="impact_recorded"
+	       		   minOccurs="0"
+	       		   maxOccurs="unbounded"
+	      		   type="xsd:float"/>
+	</xsd:sequence>
+    </xsd:complexType>
+
+      <xsd:complexType name="DosAlertSummaryArray">
+	  <xsd:sequence>
+	      <xsd:element name="dosAlertSummary"
+		  	   minOccurs="1"
+			   maxOccurs="unbounded"
+			   type="tns:DosAlertSummary"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="DosAlertInterface">
+	<xsd:sequence>
+	    <xsd:element name="gid"		type="xsd:unsignedInt"/>
+	    <xsd:element name="name"		type="xsd:string"/>
+	    <xsd:element name="description"	type="xsd:string"/>
+	    <xsd:element name="snmp_index"	type="xsd:string"/>
+	    <xsd:element name="ip"		type="xsd:string"/>
+	    <xsd:element name="bytes_total"	type="xsd:double"/>
+	    <xsd:element name="packets_total"	type="xsd:double"/>
+	    <xsd:element name="packet_rate_max"	type="xsd:double"/>
+	    <xsd:element name="byte_rate_max"	type="xsd:double"/>
+	    <xsd:element name="duration"	type="xsd:unsignedInt"/>
+	</xsd:sequence>
+    </xsd:complexType>
+
+      <xsd:complexType name="DosAlertRouter">
+	<xsd:sequence>
+	    <xsd:element name="gid"		type="xsd:unsignedInt"/>
+	    <xsd:element name="name"		type="xsd:string"/>
+	    <xsd:element name="bytes_total"	type="xsd:double"/>
+	    <xsd:element name="packets_total"	type="xsd:double"/>
+	    <xsd:element name="packet_rate_max"	type="xsd:double"/>
+	    <xsd:element name="byte_rate_max"	type="xsd:double"/>
+	    <xsd:element name="duration"	type="xsd:unsignedInt"/>
+	    <xsd:element name="start"		type="xsd:dateTime"/>
+	    <xsd:element name="stop"		type="xsd:dateTime"/>
+	    <xsd:element name="interfaces"
+				minOccurs="0"
+				maxOccurs="unbounded"
+				type="tns:DosAlertInterface"/>
+	</xsd:sequence>
+    </xsd:complexType>
+
+      <!-- Mitigation Summary -->
+      <xsd:complexType name="MitigationSummary">
+	  <xsd:sequence>
+	      <xsd:element name="id"		type="xsd:integer"/>
+	      <xsd:element name="type"		type="xsd:string"/>
+	      <xsd:element name="name"		type="xsd:string"/>
+	      <xsd:element name="description"	
+			   type="xsd:string"
+			   minOccurs="0"/>
+	      <xsd:element name="user"		type="xsd:string"/>
+	      <xsd:element name="ip_version"	type="xsd:integer"/>
+	      <xsd:element name="alert_id"
+			   type="xsd:integer"
+			   minOccurs="0"/>
+	      <xsd:element name="prefix"
+		  	   type="xsd:string"
+			   minOccurs="0"/>
+	      <xsd:element name="is_automitigation"	type="xsd:boolean"/>
+	      <xsd:element name="is_learning"		type="xsd:boolean"/>
+	      <xsd:element name="learning_cancelled"	type="xsd:boolean"/>
+	      <xsd:element name="managed_object_id" 
+			   type="xsd:integer"
+			   minOccurs="0"/>
+	      <xsd:element name="managed_object_name"
+			   type="xsd:string"
+			   minOccurs="0"/>
+	      <xsd:element name="ongoing"	type="xsd:boolean"/>
+	      <xsd:element name="start"		type="xsd:dateTime"/>
+	      <xsd:element name="stop"		
+			   minOccurs="0"
+			   type="xsd:dateTime"/>
+	      <xsd:element name="duration"	type="xsd:float"/>
+	      <xsd:element name="annotations"	
+		  	   minOccurs="0"
+			   maxOccurs="unbounded" 
+			   type="tns:Annotation"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="MitigationSummaryArray">
+	  <xsd:sequence>
+	      <xsd:element name="mitigationSummary"
+		  	   minOccurs="1"
+			   maxOccurs="unbounded"
+			   type="tns:MitigationSummary"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:simpleType name="OutputFormat">
+	  <xsd:restriction base="xsd:string">
+	      <xsd:enumeration value="xml"/>
+	      <xsd:enumeration value="csv"/>
+	  </xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:complexType name="PortTraffic">
+	<xsd:sequence>
+	    <xsd:element name="portRangeStart"	type="xsd:unsignedInt"/>
+	    <xsd:element name="portRangeEnd"	type="xsd:unsignedInt"/>
+	    <xsd:element name="name"		type="xsd:string"/>
+	    <xsd:element name="bytes"		type="xsd:double"/>
+	    <xsd:element name="packets"		type="xsd:double"/>
+	</xsd:sequence>
+    </xsd:complexType>
+
+      <xsd:complexType name="PrefixTraffic">
+	<xsd:sequence>
+	    <xsd:element name="cidr"		type="xsd:string"/>
+	    <xsd:element name="bytes"		type="xsd:double"/>
+	    <xsd:element name="packets"		type="xsd:double"/>
+	</xsd:sequence>
+    </xsd:complexType>
+
+      <xsd:complexType name="ProtocolTraffic">
+	<xsd:sequence>
+	    <xsd:element name="name"		type="xsd:string"/>
+	    <xsd:element name="number"		type="xsd:unsignedInt"/>
+	    <xsd:element name="bytes"		type="xsd:double"/>
+	    <xsd:element name="packets"		type="xsd:double"/>
+	</xsd:sequence>
+    </xsd:complexType>
+
+      <xsd:complexType name="ReportConfiguration">
+	  <xsd:sequence>
+	      <xsd:element name="id"		type="xsd:string"/>
+	      <xsd:element name="name"		type="xsd:string"/>
+	      <xsd:element name="type"		type="xsd:string"/>
+	      <xsd:element name="description"	type="xsd:string"/>
+	      <xsd:element name="tags"		
+		  	   minOccurs="0"
+			   maxOccurs="unbounded"
+		           type="xsd:string"/>
+	      <xsd:element name="recipient"	 type="xsd:string"/>
+	      <xsd:element name="schedule"	 type="xsd:string"/>
+	      <xsd:element name="last_changed_by" type="xsd:string"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="ReportConfigurationArray">
+	  <xsd:sequence>
+	      <xsd:element name="reportConfiguration"
+		  	   minOccurs="1"
+			   maxOccurs="unbounded"
+			   type="tns:ReportConfiguration"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="ReportResult">
+	  <xsd:sequence>
+	      <xsd:element name="id"		type="xsd:string"/>
+	      <xsd:element name="name"		type="xsd:string"/>
+	      <xsd:element name="type"		type="xsd:string"/>
+	      <xsd:element name="description"	type="xsd:string"/>
+	      <xsd:element name="tags"		
+		  	   minOccurs="0"
+			   maxOccurs="unbounded"
+		           type="xsd:string"/>
+	      <xsd:element name="request_time"	type="xsd:float"/>
+	      <xsd:element name="request_time_iso" type="xsd:dateTime"/>
+	      <xsd:element name="request_method" type="xsd:string"/>
+	      <xsd:element name="requested_by" type="xsd:string"/>
+	  </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="ReportResultArray">
+	  <xsd:sequence>
+	      <xsd:element name="reportResults"
+		  	   minOccurs="1"
+			   maxOccurs="unbounded"
+			   type="tns:ReportResult"/>
+	   </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="TcpFlagsTraffic">
+	<xsd:sequence>
+	    <xsd:element name="text"		type="xsd:string"/>
+	    <xsd:element name="value"		type="xsd:unsignedInt"/>
+	    <xsd:element name="bytes"		type="xsd:double"/>
+	    <xsd:element name="packets"		type="xsd:double"/>
+	</xsd:sequence>
+    </xsd:complexType>
+
+      <xsd:simpleType name="unitType">
+	  <xsd:restriction base="xsd:string">
+	      <xsd:enumeration value="bps"/>
+	      <xsd:enumeration value="pps"/>
+	  </xsd:restriction>
+      </xsd:simpleType>
+
+    <xsd:simpleType name="tmsFilterListType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="black_white"/>
+            <xsd:enumeration value="dns"/>
+            <xsd:enumeration value="ip_location"/>
+            <xsd:enumeration value="ip_address"/>
+            <xsd:enumeration value="ipv6_address"/>
+            <xsd:enumeration value="ipv6_black_white"/>
+            <xsd:enumeration value="url"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="tmsFilterListImportFormat">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="line-delimited"/>
+            <xsd:enumeration value="comma-delimited"/>
+            <xsd:enumeration value="tab-delimited"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+      <xsd:simpleType name="capabilityLevelType">
+	  <xsd:restriction base="xsd:string">
+	      <xsd:enumeration value="admin"/>
+	      <xsd:enumeration value="user"/>
+	  </xsd:restriction>
+      </xsd:simpleType>
+
+    </xsd:schema>
+
+  </types>
+
+  <!-- messages... -->
+
+  <message name="accountAdd">
+      <part name="accountConfiguration" type="tns:AccountConfiguration"/>
+  </message>
+  
+  <message name="accountAddResponse">
+    <!--This string is base64 encoded-->
+    <part name="results" type="xsd:string"/>
+  </message>
+
+ <message name="applyMitigationTemplateById">
+   <part name="mitigation_id" type="xsd:unsignedInt"/>
+   <part name="template_id" type="xsd:unsignedInt"/>
+   <part name="apply_method" type="xsd:string"/>
+ </message>
+
+ <message name="applyMitigationTemplateByIdResponse">
+   <!--This string is base64 encoded-->
+   <part name="results" type="xsd:string"/>
+ </message>
+
+ <message name="applyMitigationTemplateByName">
+   <part name="mitigation_name" type="xsd:string"/>
+   <part name="template_name" type="xsd:string"/>
+   <part name="apply_method" type="xsd:string"/>
+ </message>
+
+ <message name="applyMitigationTemplateByNameResponse">
+   <!--This string is base64 encoded-->
+   <part name="results" type="xsd:string"/>
+ </message>
+
+  <message name="accountDelete">
+    <!--This string is base64 encoded-->
+    <part name="username" type="xsd:string"/>
+    <part name="device" type="xsd:string"/>
+  </message>
+
+  <message name="accountDeleteResponse">
+    <!--This string is base64 encoded-->
+    <part name="results" type="xsd:string"/>
+  </message>
+
+  <message name="accountChangeGroup">
+    <!--These strings are base64 encoded-->
+    <part name="username" type="xsd:string"/>
+    <part name="device" type="xsd:string"/>
+    <part name="group" type="xsd:string"/>
+    <part name="capabilitylevel" type="tns:capabilityLevelType"/>
+  </message>
+
+  <message name="accountChangeGroupResponse">
+    <!--This string is base64 encoded-->
+    <part name="results" type="xsd:string"/>
+  </message>
+
+  <message name="accountChangePassword">
+    <!--This string is base64 encoded-->
+    <part name="username" type="xsd:string"/>
+    <part name="device" type="xsd:string"/>
+    <part name="password" type="xsd:base64Binary"/>
+  </message>
+
+  <message name="accountChangePasswordResponse">
+    <!--This string is base64 encoded-->
+    <part name="results" type="xsd:string"/>
+  </message>
+
+  <message name="getDosAlertSummaries">
+    <part name="filter"	    type="xsd:string"/>
+    <part name="count"	    type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="getDosAlertSummariesResponse">
+    <part name="results"  type="tns:DosAlertSummaryArray"/>
+  </message>
+
+  <message name="getDosAlertSummariesXMLResponse">
+    <part name="results"  type="xsd:string"/>
+  </message>
+
+  <message name="getDosAlertDetails">
+      <part name="alertId"	type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="getDosAlertMisuseOrProfiledDetailsResponse">
+      <part name="results"	type="tns:DosAlertDetails"/>
+  </message>
+
+  <message name="getDosAlertDetailsXMLResponse">
+      <part name="results"	type="xsd:string"/>
+  </message>
+
+  <message name="getGuardConfig"/>
+
+  <message name="getGuardConfigResponse">
+      <part name="configuration"	type="xsd:string"/>
+  </message>
+
+  <message name="getReportList">
+      <part name="filter"	type="xsd:string"/>
+      <part name="count"	type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="getReportListResponse">
+      <part name="results"	type="tns:ReportConfigurationArray"/>
+  </message>
+
+  <message name="getReportListXML">
+      <part name="filter"	type="xsd:string"/>
+      <part name="count"	type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="getReportListXMLResponse">
+      <part name="results"	type="xsd:string"/>
+  </message>
+
+  <message name="getReportResultsList">
+      <part name="filter"	type="xsd:string"/>
+      <part name="count"	type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="getReportResultsListResponse">
+      <part name="results"	type="tns:ReportResultArray"/>
+  </message>
+
+  <message name="getReportResultsListXML">
+      <part name="filter"	type="xsd:string"/>
+      <part name="count"	type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="getReportResultsListXMLResponse">
+      <part name="results"	type="xsd:string"/>
+  </message>
+
+  <message name="getLastReportResultRequest">
+      <part name="name"		type="xsd:string"/>
+  </message>
+
+  <message name="getReportResultRequest">
+      <part name="name"		type="xsd:string"/>
+      <!-- request_time comes from getReportResultsList -->
+      <part name="request_time"  type="xsd:float"/>
+  </message>
+
+  <message name="getReportResultAsPDFResponse">
+      <part name="pdf"		type="xsd:base64Binary"/>
+  </message>
+
+  <message name="getReportResultAsCSVResponse">
+      <part name="csv_zip"	type="xsd:base64Binary"/>
+  </message>
+
+  <message name="getReportResultAsXMLResponse">
+      <part name="xml"		type="xsd:string"/>
+  </message>
+
+  <message name="queueReportToRun">
+      <part name="name"		type="xsd:string"/>
+  </message>
+
+  <message name="queueReportToRunResponse">
+      <part name="result"	type="xsd:string"/>
+  </message>
+
+  <!-- at some point i'll add parameters like 'height' and 'width'... -->
+  <message name="getDosAlertGraph">
+    <part name="alertId"    type="xsd:unsignedInt"/>
+
+    <!-- if width or height are 0, a default value will be used -->
+    <part name="width"	    type="xsd:unsignedInt"/>
+    <part name="height"	    type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="getDosAlertGraphResponse">
+    <part name="graph"	    type="xsd:base64Binary"/>
+  </message>
+
+  <message name="getMitigationStatisticsByIdXML">
+    <part name="id" type="xsd:unsignedInt"/>
+    <part name="start" type="xsd:string"/>
+    <part name="stop" type="xsd:string"/>
+  </message>
+
+  <message name="getMitigationStatisticsByNameXML">
+    <part name="name" type="xsd:string"/>
+    <part name="start" type="xsd:string"/>
+    <part name="stop" type="xsd:string"/>
+  </message>
+
+  <message name="getMitigationStatisticsByIdXMLReply">
+    <part name="results" type="xsd:string"/>
+  </message>
+
+  <message name="getMitigationSummaries">
+    <part name="filter" type="xsd:string"/>
+    <part name="max_count" type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="getMitigationSummariesResponse">
+    <part name="results" type="tns:MitigationSummaryArray"/>
+  </message>
+
+  <message name="getMitigationSummariesXMLResponse">
+    <part name="results" type="xsd:string"/>
+  </message>
+
+  <message name="getTrafficGraph">
+    <!-- An XML query, same as for runXmlQuery -->
+    <part name="query" type="xsd:string"/>
+
+    <!-- An XML graph configuration -->
+    <part name="graph_configuration" type="xsd:string"/>
+  </message>
+
+  <message name="getTrafficGraphResponse">
+    <part name="graph"	    type="xsd:base64Binary"/>
+  </message>
+
+  <message name="runXmlQuery">
+    <part name="query" type="xsd:string"/>
+
+    <!-- Output format: choice of 'xml' or 'csv' -->
+    <part name="output_format" type="tns:OutputFormat"/>
+  </message>
+
+  <message name="runXmlQueryResponse">
+    <part name="data"	   type="xsd:string"/>
+  </message>
+
+  <message name="cliRun">
+    <part name="command" type="xsd:base64Binary"/>
+    <part name="timeout" type="xsd:unsignedInt"/>
+  </message>
+
+  <message name="cliRunResponse">
+    <part name="results" type="xsd:base64Binary"/>
+  </message>
+
+  <message name="addTmsFilterList">
+    <part name="name" type="xsd:string"/>
+    <part name="type" type="tns:tmsFilterListType"/>
+    <part name="filters" type="xsd:base64Binary"/>
+    <part name="import_format" type="tns:tmsFilterListImportFormat"/>
+    <part name="description" type="xsd:string"/>
+  </message>
+
+  <message name="addTmsFilterListResponse">
+    <part name="results" type="xsd:string"/>
+    <part name="validation_errors" type="xsd:base64Binary"/>
+  </message>
+
+  <message name="deleteTmsFilterList">
+    <part name="name" type="xsd:string"/>
+  </message>
+
+  <message name="deleteTmsFilterListResponse">
+    <part name="results" type="xsd:string"/>
+  </message>
+
+  <message name="editTmsFilterList">
+    <part name="name" type="xsd:string"/>
+    <part name="filters" type="xsd:base64Binary"/>
+    <part name="import_format" type="tns:tmsFilterListImportFormat"/>
+    <part name="description" type="xsd:string"/>
+  </message>
+
+  <message name="editTmsFilterListResponse">
+    <part name="results" type="xsd:string"/>
+    <part name="validation_errors" type="xsd:base64Binary"/>
+  </message>
+
+  <!-- message/port bindings -->
+
+  <portType name="PeakflowSPPort">
+
+    <operation name="accountAdd">
+            <input message="tns:accountAdd"/>
+            <output message="tns:accountAddResponse"/>
+    </operation>
+
+    <operation name="applyMitigationTemplateById">
+            <input message="tns:applyMitigationTemplateById"/>
+            <output message="tns:applyMitigationTemplateByIdResponse"/>
+    </operation>
+
+    <operation name="applyMitigationTemplateByName">
+            <input message="tns:applyMitigationTemplateByName"/>
+            <output message="tns:applyMitigationTemplateByNameResponse"/>
+    </operation>
+
+    <operation name="accountDelete">
+            <input message="tns:accountDelete"/>
+            <output message="tns:accountDeleteResponse"/>
+    </operation>
+
+    <operation name="accountChangeGroup">
+            <input message="tns:accountChangeGroup"/>
+            <output message="tns:accountChangeGroupResponse"/>
+    </operation>
+
+    <operation name="accountChangePassword">
+            <input message="tns:accountChangePassword"/>
+            <output message="tns:accountChangePasswordResponse"/>
+    </operation>
+
+    <operation name="getDosAlertSummaries">
+      <input message="tns:getDosAlertSummaries"/>
+      <output message="tns:getDosAlertSummariesResponse"/>
+    </operation>
+
+    <operation name="getDosAlertSummariesXML">
+      <input message="tns:getDosAlertSummaries"/>
+      <output message="tns:getDosAlertSummariesXMLResponse"/>
+    </operation>
+
+    <operation name="getDosAlertMisuseOrProfiledDetails">
+      <input message="tns:getDosAlertDetails"/>
+      <output message="tns:getDosAlertMisuseOrProfiledDetailsResponse"/>
+    </operation>
+
+    <operation name="getDosAlertDetailsXML">
+      <input message="tns:getDosAlertDetails"/>
+      <output message="tns:getDosAlertDetailsXMLResponse"/>
+    </operation>
+
+    <operation name="getDosAlertGraph">
+      <input message="tns:getDosAlertGraph"/>
+      <output message="tns:getDosAlertGraphResponse"/>
+    </operation>
+
+    <operation name="getMitigationStatisticsByIdXML">
+	<documentation>
+	    Return detail traffic statistics for the mitigation, including
+	    total and per-countermeasure dropped/passed data, as well as
+	    countermeasure-specific data.
+	</documentation>
+	<input message="tns:getMitigationStatisticsByIdXML"/>
+	<output message="tns:getMitigationStatisticsByIdXMLReply"/>
+    </operation>
+
+    <operation name="getMitigationStatisticsByNameXML">
+	<documentation>
+	    Return detail traffic statistics for the mitigation, including
+	    total and per-countermeasure dropped/passed data, as well as
+	    countermeasure-specific data.
+	</documentation>
+	<input message="tns:getMitigationStatisticsByNameXML"/>
+	<output message="tns:getMitigationStatisticsByIdXMLReply"/>
+    </operation>
+
+    <operation name="getMitigationSummaries">
+	<documentation>
+	    Return a summary of up to max_count (default 10) mitigations
+	    matching a search filter (same as search string entered in
+	    search box in the UI).
+	</documentation>
+	<input message="tns:getMitigationSummaries"/>
+	<output message="tns:getMitigationSummariesResponse"/>
+    </operation>
+
+    <operation name="getMitigationSummariesXML">
+	<documentation>
+	    Return a summary of up to max_count (default 10) mitigations
+	    matching a search filter (same as search string entered in
+	    search box in the UI).
+	</documentation>
+	<input message="tns:getMitigationSummaries"/>
+	<output message="tns:getMitigationSummariesXMLResponse"/>
+    </operation>
+
+    <operation name="getGuardConfig">
+	<input message="tns:getGuardConfig"/>
+	<output message="tns:getGuardConfigResponse"/>
+    </operation>
+
+    <operation name="getReportList">
+	<documentation>
+	    Return a summary of configured custom reports, filtered by the
+	    optional search filter.  The count parameter can be used to
+	    limit the number of reports returned, or if 0 the results will
+	    be unlimited.
+	</documentation>
+	<input message="tns:getReportList"/>
+	<output message="tns:getReportListResponse"/>
+    </operation>
+
+    <operation name="getReportListXML">
+	<documentation>
+	    Return a summary of configured custom reports, filtered by the
+	    optional search filter.  The count parameter can be used to
+	    limit the number of reports returned, or if 0 the results will
+	    be unlimited.  Results are returned in XML format.
+	</documentation>
+	<input message="tns:getReportListXML"/>
+	<output message="tns:getReportListXMLResponse"/>
+    </operation>
+
+    <operation name="getReportResultsList">
+	<documentation>
+	    Return a summary of available custom reports results, filtered
+	    by the optional search filter.  The count parameter can be used
+	    to limit the number of reports returned, or if 0 the results
+	    will be unlimited.
+	</documentation>
+	<input message="tns:getReportResultsList"/>
+	<output message="tns:getReportResultsListResponse"/>
+    </operation>
+
+    <operation name="getReportResultsListXML">
+	<documentation>
+	    Return a summary of available custom reports results, filtered
+	    by the optional search filter.  The count parameter can be used
+	    to limit the number of reports returned, or if 0 the results
+	    will be unlimited.  The results are returned in XML format.
+	</documentation>
+	<input message="tns:getReportResultsListXML"/>
+	<output message="tns:getReportResultsListXMLResponse"/>
+    </operation>
+
+    <operation name="getLastReportResultAsPDF">
+	<documentation>
+	    Return the output of the named custom report's last run in 
+	    PDF format.
+	</documentation>
+	<input message="tns:getLastReportResultRequest"/>
+	<output message="tns:getReportResultAsPDFResponse"/>
+    </operation>
+
+    <operation name="getLastReportResultAsCSV">
+	<documentation>
+	    Return the output of the named custom report's last run in 
+	    CSV format.  Results are returned as a zip file containing one
+	    or more CSV files, one per query in the report.
+	</documentation>
+	<input message="tns:getLastReportResultRequest"/>
+	<output message="tns:getReportResultAsCSVResponse"/>
+    </operation>
+
+    <operation name="getLastReportResultAsXML">
+	<documentation>
+	    Return the output of the named custom report's last run in 
+	    XML format.
+	</documentation>
+	<input message="tns:getLastReportResultRequest"/>
+	<output message="tns:getReportResultAsXMLResponse"/>
+    </operation>
+
+    <operation name="getReportResultAsPDF">
+	<documentation>
+	    Return the output of the named custom report's run from the
+	    specified time in PDF format.
+	</documentation>
+	<input message="tns:getReportResultRequest"/>
+	<output message="tns:getReportResultAsPDFResponse"/>
+    </operation>
+
+    <operation name="getReportResultAsCSV">
+	<documentation>
+	    Return the output of the named custom report's run from the
+	    specified time in CSV format.  Results are returned as a zip
+	    file containing one or more CSV files, one per query in the
+	    report.
+	</documentation>
+	<input message="tns:getReportResultRequest"/>
+	<output message="tns:getReportResultAsCSVResponse"/>
+    </operation>
+
+    <operation name="getReportResultAsXML">
+	<documentation>
+	    Return the output of the named custom report's run from the
+	    specified time in XML format.
+	</documentation>
+	<input message="tns:getReportResultRequest"/>
+	<output message="tns:getReportResultAsXMLResponse"/>
+    </operation>
+
+    <operation name="queueReportToRun">
+	<documentation>
+	    Queue a configured custom report to run.  It will be run as soon
+	    as possible (up to 8 reports may be running at any one time).
+	</documentation>
+	<input message="tns:queueReportToRun"/>
+	<output message="tns:queueReportToRunResponse"/>
+    </operation>
+
+    <operation name="getTrafficGraph">
+	    <input message="tns:getTrafficGraph"/>
+	    <output message="tns:getTrafficGraphResponse"/>
+    </operation>
+
+    <operation name="runXmlQuery">
+	<documentation>
+	    Run the supplied XML query and return data in the specified
+	    format -- currently XML and CSV output is supported.
+	</documentation>
+	    <input message="tns:runXmlQuery"/>
+	    <output message="tns:runXmlQueryResponse"/>
+    </operation>
+
+    <operation name="cliRun">
+            <input message="tns:cliRun"/>
+            <output message="tns:cliRunResponse"/>
+    </operation>
+
+    <operation name="addTmsFilterList">
+        <documentation>
+            Adds a TMS filter list and its filter list entries.  If successful,
+            the results response value is set to Success.   If validation 
+            errors occurred, the validation_error response value is set to
+            the validation errors found when parsing the input entries, and
+            the results response value to a value other than Success.
+        </documentation>
+        <input message="tns:addTmsFilterList"/>
+        <output message="tns:addTmsFilterListResponse"/>
+    </operation>
+
+    <operation name="deleteTmsFilterList">
+        <documentation>
+            Deletes a TMS filter list and its filter list entries.
+        </documentation>
+        <input message="tns:deleteTmsFilterList"/>
+        <output message="tns:deleteTmsFilterListResponse"/>
+    </operation>
+
+    <operation name="editTmsFilterList">
+        <documentation>
+            Provides a way to update TMS filter list entries.  If successful,
+            the results response value is set to Success.   If validation 
+            errors occurred, the validation_error response value is set to
+            the validation errors found when parsing the input entries, and
+            the results response value to a value other than Success.
+        </documentation>
+        <input message="tns:editTmsFilterList"/>
+        <output message="tns:editTmsFilterListResponse"/>
+    </operation>
+
+  </portType>
+
+  <!-- soap/port bindings -->
+
+  <binding name="PeakflowSPBinding" type="tns:PeakflowSPPort">
+
+    <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <operation name="getDosAlertSummaries">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getDosAlertSummariesXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getDosAlertMisuseOrProfiledDetails">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getDosAlertDetailsXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getDosAlertGraph">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getMitigationStatisticsByIdXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getMitigationStatisticsByNameXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getMitigationSummaries">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getMitigationSummariesXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getTrafficGraph">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getGuardConfig">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getReportList">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getReportListXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getReportResultsList">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getReportResultsListXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getLastReportResultAsPDF">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getLastReportResultAsCSV">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getLastReportResultAsXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getReportResultAsPDF">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getReportResultAsCSV">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="getReportResultAsXML">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="queueReportToRun">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="runXmlQuery">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+	<soap:body use="encoded"
+		   namespace="urn:PeakflowSP"
+		   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="cliRun">
+    	<soap:operation soapAction="urn:PeakflowSPAction"/>
+    	<input>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP"
+                           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</input>
+    	<output>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</output>
+    </operation>
+
+    <operation name="accountAdd">
+    	<soap:operation soapAction="urn:PeakflowSPAction"/>
+    	<input>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP"
+                           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</input>
+    	<output>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</output>
+    </operation>
+
+    <operation name="accountDelete">
+    	<soap:operation soapAction="urn:PeakflowSPAction"/>
+    	<input>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP"
+                           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</input>
+    	<output>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</output>
+    </operation>
+
+    <operation name="applyMitigationTemplateById">
+    	<soap:operation soapAction="urn:PeakflowSPAction"/>
+    	<input>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP"
+                           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</input>
+    	<output>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</output>
+    </operation>
+
+    <operation name="applyMitigationTemplateByName">
+    	<soap:operation soapAction="urn:PeakflowSPAction"/>
+    	<input>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP"
+                           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</input>
+    	<output>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</output>
+    </operation>
+
+    <operation name="accountChangeGroup">
+    	<soap:operation soapAction="urn:PeakflowSPAction"/>
+    	<input>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP"
+                           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</input>
+    	<output>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</output>
+    </operation>
+
+    <operation name="accountChangePassword">
+    	<soap:operation soapAction="urn:PeakflowSPAction"/>
+    	<input>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP"
+                           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</input>
+    	<output>
+        	<soap:body use="encoded"
+                           namespace="urn:PeakflowSP" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    	</output>
+    </operation>
+
+    <operation name="addTmsFilterList">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+        <soap:body use="encoded"
+                   namespace="urn:PeakflowSP"
+                   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded"
+                   namespace="urn:PeakflowSP"
+                   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="deleteTmsFilterList">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+        <soap:body use="encoded"
+                   namespace="urn:PeakflowSP"
+                   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded"
+                   namespace="urn:PeakflowSP"
+                   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    <operation name="editTmsFilterList">
+      <soap:operation soapAction="urn:PeakflowSPAction"/>
+      <input>
+        <soap:body use="encoded"
+                   namespace="urn:PeakflowSP"
+                   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded"
+                   namespace="urn:PeakflowSP"
+                   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+  </binding>
+
+  <!-- endpoint/soap binding -->
+  <service name="PeakflowSPService">
+    <port name="PeakflowSPPort" binding="tns:PeakflowSPBinding">
+      <soap:address location="https://@@HOSTNAME@@/soap/sp"/>
+    </port>
+  </service>
+
+</definitions>
