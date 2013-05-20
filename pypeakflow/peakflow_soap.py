@@ -43,11 +43,18 @@ ZSI.digest_auth.fetch_challenge = new_fetch_challenge
 
 
 
-class Peakflow:
+class PeakflowSOAP:
     """ Client library for talking to Arbor Peakflow SP via SOAP
     """
 
-    def __init__(self, host, username, password):
+    __shared_state = {}
+
+    def __init__(self, host = None, username = None, password = None):
+        self.__dict__ = self.__shared_state
+
+        # only do init if this is first time we are being run
+        if host is None or username is None or password is None:
+            return
 
         # ZSI init
         wsdl_url = 'file://%s/PeakflowSP.wsdl' % os.getcwd()
@@ -63,6 +70,18 @@ class Peakflow:
         """
         """
         return self.soap.cliRun(command = command, timeout = self._timeout)
+
+
+
+    def getTrafficGraph(self, query, graph_configuration):
+        print query
+        return self.soap.getTrafficGraph(query = query, graph_configuration = graph_configuration)
+
+
+    def runXmlQuery(self, query):
+        print query
+        return self.soap.runXmlQuery(query = query)
+
 
 
 
@@ -95,7 +114,7 @@ if __name__ == '__main__':
         print >> sys.stderr, "Please specify a password to be used for the SOAP API connection."
         sys.exit(1)
 
-    pf = Peakflow(options.host, options.username, options.password)
+    pf = PeakflowSOAP(options.host, options.username, options.password)
 
     if options.cli_run:
         print pf.cliRun(options.cli_run)
