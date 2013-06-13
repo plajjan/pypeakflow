@@ -67,19 +67,17 @@ class PeakflowSOAP:
 
 
     def cliRun(self, command):
-        """
+        """ Run a command
         """
         return self.soap.cliRun(command = command, timeout = self._timeout)
 
 
 
     def getTrafficGraph(self, query, graph_configuration):
-        print query
         return self.soap.getTrafficGraph(query = query, graph_configuration = graph_configuration)
 
 
     def runXmlQuery(self, query):
-        print query
         return self.soap.runXmlQuery(query = query)
 
 
