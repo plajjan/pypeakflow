@@ -23,7 +23,7 @@ class Report:
                     </filter>
                 </query>
             </peakflow>
-            """ % graph_id
+            """ % int(graph_id)
 
         gc = """<?xml version="1.0" encoding="utf-8"?>
             <peakflow version="2.0">
@@ -39,7 +39,7 @@ class Report:
 
         res = self.pf.getTrafficGraph(query, gc)
 
-        f = open(filename, "w")
+        f = open(output_filename, "w")
         f.write(res['graph'])
         f.close()
 
@@ -60,9 +60,14 @@ if __name__ == '__main__':
     parser.add_option("-U", "--username", help="username for SOAP API connection")
     parser.add_option("-P", "--password", help="password for SOAP API connection")
     parser.add_option("--graph-id", metavar="ID", help="get a graph for customer with id ID")
+    parser.add_option("--output-file", metavar="FILE", help="write output to FILE")
     (options, args) = parser.parse_args()
 
     pf = PeakflowSOAP(options.host, options.username, options.password)
 
+    if options.graph_id and not options.output_file:
+        print >> sys.stderr, "Please provide an output file to write the graph to with --output-file"
+        sys.exit(1)
+
     f = Report()
-    f.get_graph(options.graph)
+    f.get_graph(options.graph_id, options.output_file)
