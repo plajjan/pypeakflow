@@ -77,8 +77,8 @@ class PeakflowSOAP:
         return self.soap.getTrafficGraph(query = query, graph_configuration = graph_configuration)
 
 
-    def runXmlQuery(self, query):
-        return self.soap.runXmlQuery(query = query)
+    def runXmlQuery(self, query, output_format = 'xml'):
+        return self.soap.runXmlQuery(query = query, output_format = output_format)
 
 
 
