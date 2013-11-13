@@ -122,5 +122,5 @@ if __name__ == '__main__':
                 options.graph_title, options.filter, 1)
 
     if options.table:
-        f.get_table(options.output_file, options.mo_type, options.mo_id,
+        print f.get_table(options.output_file, options.mo_type, options.mo_id,
                 options.graph_title, options.filter, 1)

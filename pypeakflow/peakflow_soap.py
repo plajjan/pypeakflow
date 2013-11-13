@@ -80,6 +80,16 @@ class PeakflowSOAP:
     def runXmlQuery(self, query, output_format = 'xml'):
         return self.soap.runXmlQuery(query = query, output_format = output_format)
 
+    def getDosAlertDetailsXML(self, alert_id):
+        return self.soap.getDosAlertDetailsXML(alertID = alert_id)
+
+    def getDosAlertGraph(self, alert_id, width, height):
+        return self.soap.getDosAlertGraph(alertID = alert_id, width = width, height = height)
+
+    def getMitigationSummariesXML(self, filter = '', max_count = 1000):
+        return self.soap.getMitigationSummariesXML(filter = filter, max_count = max_count)
+
+
 
 
 
