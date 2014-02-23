@@ -11,6 +11,10 @@ system.
 Status of this is alpha alpha.. but please contribute if you are interested in
 the topic :)
 
+I'm currently using both SUDS and ZSI for SOAP calls as I'm having difficulty
+decoding certain results with SUDS while for other stuff SUDS provides much
+better output.
+
 Usage
 -----
 Try running a command;
