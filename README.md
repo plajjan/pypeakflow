@@ -10,3 +10,10 @@ system.
 
 Status of this is alpha alpha.. but please contribute if you are interested in
 the topic :)
+
+Usage
+-----
+Try running a command;
+
+	python peakflow_soap.py -H my-peakflow-box -U username -P password --cli-run "system version"
+
