@@ -2,8 +2,45 @@ import logging
 import sys
 import os
 import re
+import urllib
 
 from peakflow_soap import ConnectionOptions, PeakflowSOAP
+
+class MoMatch:
+    """ Match
+    """
+
+class MoMatchAspath(MoMatch):
+    def __init__(self):
+        self.aspath = None
+
+    @classmethod
+    def from_value(cls, aspath_string=None):
+        match = MoMatchAspath()
+        if aspath_string:
+            match.aspath = urllib.unquote(aspath_string)
+        return match
+
+    def __repr__(self):
+        return "AS Path Regexp: %s" % self.aspath
+
+
+class MoMatchCidrBlocks(MoMatch):
+    def __init__(self):
+        self.prefix = []
+
+    @classmethod
+    def from_value(cls, prefix_string=None):
+        match = MoMatchCidrBlocks()
+        if prefix_string:
+            match.prefix = list(set(prefix_string.split(',')))
+        return match
+
+    def __repr__(self):
+        res = "CIDR blocks:\n"
+        for prefix in sorted(self.prefix):
+            res += "    %s\n" % prefix
+        return res
 
 
 class ManagedObject:
@@ -11,10 +48,11 @@ class ManagedObject:
     """
 
     def __init__(self):
+        self.config_lines = []
         self.name = None
         self.family = None
         self.tags = {}
-        self.match_peer_as = None
+        self.match = None
 
     def __repr__(self):
         return "%s" % self.name
@@ -58,7 +96,16 @@ class ManagedObject:
         """
         mo = ManagedObject()
         for line in lines:
+            # store a verbatim copy of the configuration lines that pertain to
+            # this MO
+            mo.config_lines.append(line)
+
             # name
+            m = re.match('services sp managed_objects add(_with_parent)? "(?P<name>[^"]+)"', line)
+            if m is not None:
+                mo.name = m.group('name').split('|')[-1]
+
+            # description
             m = re.match('services sp managed_objects add(_with_parent)? "(?P<name>[^"]+)"', line)
             if m is not None:
                 mo.name = m.group('name').split('|')[-1]
@@ -68,15 +115,18 @@ class ManagedObject:
             if m is not None:
                 mo.family = m.group(2)
 
-            # peer_as
-            m = re.match('services sp managed_objects edit "([^"]+)" match set peer_as ([0-9]+)', line)
-            if m is not None:
-                mo.match_peer_as = int(m.group(2))
-
             # tag
             m = re.match('services sp managed_objects edit "([^"]+)" tags add "([^"]+)"', line)
             if m is not None:
                 mo.tags[m.group(2)] = None
+
+            # match
+            m = re.match('services sp managed_objects edit "([^"]+)" match set (?P<match>[^ ]+) (?P<value>.+)', line)
+            if m is not None:
+                if m.group('match') == 'asregexp_uri':
+                    mo.match = MoMatchAspath.from_value(m.group('value').strip('"'))
+                if m.group('match') == 'cidr_blocks':
+                    mo.match = MoMatchCidrBlocks.from_value(m.group('value'))
 
         return mo
 
@@ -100,6 +150,7 @@ if __name__ == '__main__':
     parser.add_option("-P", "--password", help="password for SOAP API connection")
     parser.add_option("--test-slurp", help="test to slurp config FILE")
     parser.add_option("--list", action='store_true', help="list MOs")
+    parser.add_option("--show", metavar='MO', help="Show detailed info on MO")
     (options, args) = parser.parse_args()
 
     co = ConnectionOptions(options.host, options.username, options.password)
@@ -117,5 +168,18 @@ if __name__ == '__main__':
             tags = []
             for tag in mo.tags:
                 tags.append(tag)
-            print mo.name, tags, mo.match_peer_as
+
+        if options.show:
+            mo = None
+            for mo_name in mos:
+                if mo_name.name == options.show:
+                    mo = mo_name
+
+            print "Configuration:"
+            for line in mo.config_lines:
+                print line
+            print "%-10s : %s" % ('Name', mo.name)
+            print mo.match
+
+
 
