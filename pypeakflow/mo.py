@@ -35,11 +35,12 @@ class ManagedObject:
         mos = []
         raw_mos = {}
         for line in config.splitlines():
-            m = re.match('services sp managed_objects (add|edit) "([^"]+)"', line)
+            m = re.match('services sp managed_objects (add(_with_parent)?|edit) "(?P<name>[^"]+)"', line)
             if m is not None:
-                if m.group(2) not in raw_mos:
-                    raw_mos[m.group(2)] = []
-                raw_mos[m.group(2)].append(line)
+                name = m.group('name').split('|')[-1]
+                if name not in raw_mos:
+                    raw_mos[name] = []
+                raw_mos[name].append(line)
 
         for name in raw_mos:
             mos.append(ManagedObject.from_lines(raw_mos[name]))
@@ -58,9 +59,9 @@ class ManagedObject:
         mo = ManagedObject()
         for line in lines:
             # name
-            m = re.match('services sp managed_objects add "([^"]+)"', line)
+            m = re.match('services sp managed_objects add(_with_parent)? "(?P<name>[^"]+)"', line)
             if m is not None:
-                mo.name = m.group(1)
+                mo.name = m.group('name').split('|')[-1]
 
             # family
             m = re.match('services sp managed_objects edit "([^"]+)" family set "([^"]+)"', line)
