@@ -3,7 +3,7 @@ import logging
 import sys
 import os
 import re
-from peakflow_soap import PeakflowSOAP 
+from peakflow_soap import ConnectionOptions, PeakflowSOAP 
 
 from lxml import objectify
 
@@ -222,12 +222,11 @@ if __name__ == '__main__':
     parser.add_option("--detail", action="store_true", help="Print a details of alert")
     (options, args) = parser.parse_args()
 
-    co = peakflow_soap.ConnectionOptions(host=options.host,
-            username=options.username, password=options.password)
+    co = ConnectionOptions(options.host, options.username, options.password)
 #    pf = PeakflowSOAP(options.host, options.username, options.password)
 
     for arg in args:
-        alert = Alert().from_id(arg)
+        alert = Alert().from_id(co, arg)
         if options.human:
             print alert.get_current_status()
         if options.detail:

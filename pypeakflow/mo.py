@@ -3,6 +3,8 @@ import sys
 import os
 import re
 
+from peakflow_soap import ConnectionOptions, PeakflowSOAP
+
 
 class ManagedObject:
     """ Manged Object
@@ -14,11 +16,16 @@ class ManagedObject:
         self.tags = {}
         self.match_peer_as = None
 
+    def __repr__(self):
+        return "%s" % self.name
+
     @classmethod
-    def from_peakflow(cls):
+    def from_peakflow(cls, co):
         """
         """
-        pf = pypeakflow.Peakflow()
+        pf = PeakflowSOAP(co)
+        config = pf.cliRun("config show")
+        return cls.from_conf(config['results'])
 
     @classmethod
     def from_conf(cls, config):
@@ -81,14 +88,25 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     log_stream = logging.StreamHandler()
     log_stream.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s %(message)s"))
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     logger.addHandler(log_stream)
 
     import optparse
 
     parser = optparse.OptionParser()
+    parser.add_option("-H", "--host", help="host for SOAP API connection, typically the leader")
+    parser.add_option("-U", "--username", help="username for SOAP API connection")
+    parser.add_option("-P", "--password", help="password for SOAP API connection")
     parser.add_option("--test-slurp", help="test to slurp config FILE")
+    parser.add_option("--list", action='store_true', help="list MOs")
     (options, args) = parser.parse_args()
+
+    co = ConnectionOptions(options.host, options.username, options.password)
+
+    if options.list:
+        for mo in ManagedObject.from_peakflow(co):
+            print mo.name
+
 
     if options.test_slurp:
         f = open(options.test_slurp)
