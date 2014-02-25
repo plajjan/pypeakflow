@@ -18,7 +18,7 @@ class PeakflowSuds:
     """
 
     def __init__(self, con_opts):
-        wsdl_url = 'file://%s/PeakflowSP.wsdl' % os.getcwd()
+        wsdl_url = 'file://%s/PeakflowSP.wsdl' % os.path.dirname(__file__)
         soap_url = 'https://%s/soap/sp' % con_opts.host
 
         # SOAP shit
