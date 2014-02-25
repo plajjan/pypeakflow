@@ -37,6 +37,10 @@ class PeakflowSOAP:
         return self.zsi.cliRun(command = command)
 
 
+    def commit(self, comment=None):
+        return self.zsi.cliRun(command = 'config write')
+
+
     def getTrafficGraph(self, query, graph_configuration):
         return self.suds.getTrafficGraph(query = query, graph_configuration = graph_configuration)
 
