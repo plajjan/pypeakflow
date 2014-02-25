@@ -3,9 +3,11 @@ import sys
 import os
 import re
 import textwrap
+import urllib
 
+from peakflow_soap import ConnectionOptions, PeakflowSOAP
 
-class IntfRule:
+class InterfaceRule:
     """ Auto-Configuration Rule 
     """
 
@@ -23,9 +25,10 @@ class IntfRule:
         self.action_set_type = None
         self.action_asns = False
         self.action_set_asn = None
-        self.action_set_mo = None
+        # simple, backbone, MO-facing
+        self.action_set_mo_type = None
         self.action_set_mo_direction = None
-        self.action_set_mos = None
+        self.action_set_mos = []
         self.action_high_threshold = None
         self.action_low_threshold = None
 
@@ -58,7 +61,7 @@ class IntfRule:
                 raw_intf_rules[m.group(2)].append(line)
 
         for name in raw_intf_rules:
-            intf_rules.append(IntfRule.from_lines(raw_intf_rules[name]))
+            intf_rules.append(InterfaceRule.from_lines(raw_intf_rules[name]))
 
         return intf_rules
 
@@ -68,10 +71,10 @@ class IntfRule:
     def from_lines(cls, lines):
         """ Create an auto config interface rule from a set of configuration lines
 
-            Returns one IntfRule representing a auto config interface rule on the
+            Returns one InterfaceRule representing a auto config interface rule on the
             Peakflow platform.
         """
-        ir = IntfRule()
+        ir = InterfaceRule()
         for line in lines:
             # store a verbatim copy of the configuration lines that pertain to
             # this interface rule
@@ -117,7 +120,50 @@ class IntfRule:
             if m is not None:
                 ir.action_set_asn = int(m.group(2))
 
+            # mo type... simple / backbone / managed_object
+            m = re.match('services sp auto-config interface rules edit "([^"]+)" managed_objects type set (.+)$', line)
+            if m is not None:
+                ir.action_set_mo_type = m.group(2)
+
+            # mos
+            m = re.match('services sp auto-config interface rules edit "([^"]+)" managed_objects add "([^"]+)"', line)
+            if m is not None:
+                ir.action_set_mos.append(m.group(2))
+
         return ir
+
+
+    def save(self):
+        cmds = []
+        cmds.append("services sp auto-config interface rules add \"%s\"" % self.name)
+        cmds.append("services sp auto-config interface rules edit \"%s\" precedence set %s" % (self.name, self.precedence))
+
+        if self.action_type:
+            cmds.append("services sp auto-config interface rules edit \"%s\" action type enable" % self.name)
+            cmds.append("services sp auto-config interface rules edit \"%s\" type set %s" % (self.name, self.action_set_type))
+        else:
+            cmds.append("services sp auto-config interface rules edit \"%s\" action type disable" % self.name)
+
+        if self.action_asns:
+            cmds.append("services sp auto-config interface rules edit \"%s\" action asns enable" % self.name)
+            cmds.append("services sp auto-config interface rules edit \"%s\" peers set %s" % (self.name, self.action_set_asn))
+        else:
+            cmds.append("services sp auto-config interface rules edit \"%s\" action asns disable" % self.name)
+
+        if self.action_set_mo:
+            cmds.append("services sp auto-config interface rules edit \"%s\" action managed_objects enable" % self.name)
+            cmds.append("services sp auto-config interface rules edit \"%s\" managed_objects type set %s" % (self.name, self.action_set_mo_type))
+            for mo in self.action_set_mos:
+                cmds.append("services sp auto-config interface rules edit \"%s\" managed_objects add \"%s\"" % (self.name, mo))
+        else:
+            cmds.append("services sp auto-config interface rules edit \"%s\" managed_objects clear" % self.name)
+
+        cmds.append("services sp auto-config interface rules edit \"%s\" regexp set \"%s\"" % (self.name, self.match_intf_desc_regex))
+
+        pf = PeakflowSOAP(self.co)
+        for cmd in cmds:
+            res = pf.cliRun(cmd)
+        return res
 
 class IntfRuleList(list):
     """ Class that will emulate a normal list but is ordered by precedence of
@@ -141,7 +187,7 @@ if __name__ == '__main__':
 
     if options.test_slurp:
         f = open(options.test_slurp)
-        intf_rules = IntfRule.from_conf(f.read())
+        intf_rules = InterfaceRule.from_conf(f.read())
         f.close()
         if options.list:
             for rule in intf_rules:
@@ -156,7 +202,9 @@ if __name__ == '__main__':
                 print "  -- Actions --"
                 print "     Type     :", rule.action_set_type, "(" + str(rule.action_type) + ")"
                 print "     ASNs     :", rule.action_set_asn, "(" + str(rule.action_asns) + ")"
+                print "     MOs      :", str(rule.action_set_mo_type), str(rule.action_set_mos)
                 print "  -- Raw configuration --"
                 for line in rule.config_lines:
                     print "    %s" % line
+
 

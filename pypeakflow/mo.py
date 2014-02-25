@@ -186,6 +186,7 @@ class ManagedObject:
         return mo
 
     def save(self):
+        # TODO: implement support for parents..
         cmds = []
         cmds.append("services sp managed_objects add \"%s\"" % self.name)
         for tag in self.tags:
