@@ -10,13 +10,13 @@ class MoMatch:
     """ Match
     """
 
-class MoMatchAspath(MoMatch):
+class MoMatchAsPath(MoMatch):
     def __init__(self):
         self.aspath = None
 
     @classmethod
     def from_value(cls, aspath_string=None):
-        match = MoMatchAspath()
+        match = MoMatchAsPath()
         if aspath_string:
             match.aspath = urllib.unquote(aspath_string)
         return match
@@ -41,6 +41,41 @@ class MoMatchCidrBlocks(MoMatch):
         for prefix in sorted(self.prefix):
             res += "    %s\n" % prefix
         return res
+
+
+class MoMatchCidrV6Blocks(MoMatch):
+    def __init__(self):
+        self.prefix = []
+
+    @classmethod
+    def from_value(cls, prefix_string=None):
+        match = MoMatchCidrV6Blocks()
+        if prefix_string:
+            match.prefix = list(set(prefix_string.split(',')))
+        return match
+
+    def __repr__(self):
+        res = "CIDRv6 blocks:\n"
+        for prefix in sorted(self.prefix):
+            res += "    %s\n" % prefix
+        return res
+
+
+
+
+class MoMatchPeerAs(MoMatch):
+    def __init__(self):
+        self.peer_as = []
+
+    @classmethod
+    def from_value(cls, peer_as_string=None):
+        match = MoMatchPeerAs()
+        if peer_as_string:
+            match.peer_as = peer_as_string
+        return match
+
+    def __repr__(self):
+        return "Peer AS: %s" % self.peer_as
 
 
 class ManagedObject:
@@ -124,9 +159,15 @@ class ManagedObject:
             m = re.match('services sp managed_objects edit "([^"]+)" match set (?P<match>[^ ]+) (?P<value>.+)', line)
             if m is not None:
                 if m.group('match') == 'asregexp_uri':
-                    mo.match = MoMatchAspath.from_value(m.group('value').strip('"'))
-                if m.group('match') == 'cidr_blocks':
+                    mo.match = MoMatchAsPath.from_value(m.group('value').strip('"'))
+                elif m.group('match') == 'cidr_blocks':
                     mo.match = MoMatchCidrBlocks.from_value(m.group('value'))
+                elif m.group('match') == 'cidr_v6_blocks':
+                    mo.match = MoMatchCidrV6Blocks.from_value(m.group('value'))
+                elif m.group('match') == 'peer_as':
+                    mo.match = MoMatchPeerAs.from_value(m.group('value'))
+                else:
+                    raise NotImplementedError("No match class for: %s" % m.group('match'))
 
         return mo
 
@@ -175,11 +216,11 @@ if __name__ == '__main__':
                 if mo_name.name == options.show:
                     mo = mo_name
 
-            print "Configuration:"
-            for line in mo.config_lines:
-                print line
+#            print "Configuration:"
+#            for line in mo.config_lines:
+#                print line
             print "%-10s : %s" % ('Name', mo.name)
-            print mo.match
+            print "Match", mo.match
 
 
 
