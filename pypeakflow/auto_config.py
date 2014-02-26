@@ -136,6 +136,7 @@ class InterfaceRule:
     def save(self):
         cmds = []
         cmds.append("services sp auto-config interface rules add \"%s\"" % self.name)
+        cmds.append("services sp auto-config interface rules edit \"%s\" description set \"%s\"" % (self.name, self.description))
         cmds.append("services sp auto-config interface rules edit \"%s\" precedence set %s" % (self.name, self.precedence))
 
         if self.action_type:
